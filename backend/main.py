@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from ml_models import MLPredictor
-from trading_strategy import TradingStrategy
+from backend.ml_models import MLPredictor
+from backend.trading_strategy import TradingStrategy
 import yfinance as yf
 from datetime import datetime
 import logging
