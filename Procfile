@@ -1,1 +1,1 @@
-web: cd frontend && npm start & cd backend && gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app
+web: cd backend && gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app & cd frontend && npm install && npm start
