@@ -1,6 +1,5 @@
 {
-  "cacheDirectories": ["frontend/.next/cache"],
-  "scripts": {
-    "heroku-postbuild": "cd frontend && npm install && npm run build"
+  "engines": {
+    "node": ">=18.17.0"
   }
 }
