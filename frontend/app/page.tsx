@@ -30,7 +30,7 @@ export default function TradingDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const API_URL = '/api'; // This will be proxied to your backend
+  const API_URL = 'https://trading-bot-100-aa98ae252321.herokuapp.com';
 
   useEffect(() => {
     fetchData();
