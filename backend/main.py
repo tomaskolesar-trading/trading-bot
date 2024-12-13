@@ -1,10 +1,14 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, staticfiles
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from backend.ml_models import MLPredictor
 from backend.trading_strategy import TradingStrategy
 import yfinance as yf
 from datetime import datetime
 import logging
 from typing import Dict, List
+from fastapi.middleware.cors import CORSMiddleware
+import os
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -13,6 +17,19 @@ logger = logging.getLogger(__name__)
 # Initialize FastAPI
 app = FastAPI(title="Trading Bot API")
 
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Mount static files from Next.js build
+app.mount("/_next", StaticFiles(directory="../frontend/.next"), name="next-static")
+app.mount("/static", StaticFiles(directory="../frontend/public"), name="static")
+
 # Initialize ML model and trading bot
 ml_predictor = MLPredictor()
 trading_bot = TradingStrategy(initial_balance=1000)
@@ -20,7 +37,12 @@ trading_bot = TradingStrategy(initial_balance=1000)
 # Track monitored symbols
 MONITORED_SYMBOLS = ["AAPL", "MSFT", "GOOGL"]
 
+# Serve the Next.js frontend at root
 @app.get("/")
+async def serve_frontend():
+    return FileResponse("../frontend/.next/server/pages/index.html")
+
+@app.get("/api/status")
 async def root():
     """Root endpoint showing bot status"""
     return {
@@ -29,7 +51,7 @@ async def root():
         "positions": trading_bot.positions
     }
 
-@app.get("/stocks")
+@app.get("/api/stocks")
 async def get_stocks():
     """Get analysis for all monitored stocks"""
     try:
@@ -73,7 +95,7 @@ async def get_stocks():
         logger.error(f"Error getting stocks: {str(e)}")
         return {"error": str(e)}
 
-@app.get("/portfolio")
+@app.get("/api/portfolio")
 async def get_portfolio():
     """Get current portfolio status"""
     total_value = trading_bot.get_total_value()
@@ -89,7 +111,7 @@ async def get_portfolio():
         }
     }
 
-@app.post("/trade/{symbol}")
+@app.post("/api/trade/{symbol}")
 async def execute_trade(symbol: str, action: str, quantity: int):
     """Execute a buy or sell trade"""
     try:
@@ -117,7 +139,7 @@ async def execute_trade(symbol: str, action: str, quantity: int):
         logger.error(f"Error executing trade: {str(e)}")
         return {"error": str(e)}
 
-@app.post("/add_symbol/{symbol}")
+@app.post("/api/add_symbol/{symbol}")
 async def add_symbol(symbol: str):
     """Add new symbol to monitoring list"""
     try:
@@ -136,7 +158,7 @@ async def add_symbol(symbol: str):
         logger.error(f"Error adding symbol: {str(e)}")
         return {"error": str(e)}
 
-@app.delete("/remove_symbol/{symbol}")
+@app.delete("/api/remove_symbol/{symbol}")
 async def remove_symbol(symbol: str):
     """Remove symbol from monitoring list"""
     try:
@@ -152,7 +174,7 @@ async def remove_symbol(symbol: str):
         logger.error(f"Error removing symbol: {str(e)}")
         return {"error": str(e)}
 
-@app.get("/health")
+@app.get("/api/health")
 async def health_check():
     """Health check endpoint"""
     return {
